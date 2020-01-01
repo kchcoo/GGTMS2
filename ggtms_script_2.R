@@ -38,3 +38,23 @@ test_PM10_2 <- pivot_wider(test_PM10, names_from = LOC_CODE, values_from = PM10)
 #모든 시간 자료는 하나만 있어야 함, 측정물질이 달라지면 다른 테이블의 형태로 다른 channel로 구성되야 한다고 판단됨
 #따라서 이상치 처리를 제외한 데이터 구성의 형태는 시간과 측정소번호로 구성된 테이블이 각 물질별 갯수만큼 각각의 채널로 존재하는 형태
 
+#target data 만들기 각 데이터의 24시간 후 데이터를 찾아서 뒷 컬럼에 붙임(PM10, PM2.5 대상)
+
+for(i in length(raw_1904_1910_6$DATA_DT)){
+  
+}
+
+#PM10 테스트자료에서 시간데이터가 5분간격으로 중간에 빠지거나 잘린곳이 없는지 점검
+#but 시계열 데이터를 고려하여 딥러닝 시킬것이 아니면 현재 접근법은 단순 회귀이므로 일단 시계열 데이터가 빠졌는지 상관할 필요는 없음
+#심지어 중간에 빠진 부분이 있어도 그 부분도 시계열 딥러닝에서 빠진 시간으로 고려될 것이므로 더욱 상관없을듯
+
+#lag()를 사용하려고 고려했지만 중간에 빠진 시간이 있으면 그대로 시간이 밀려서 lag될 것이므로 포기
+#DATA_DT에서 24시간 후를 더한 컬럼을 새로 만들어서 merge시켜보기로 함
+test_PM10_3 <- test_PM10_2
+test_PM10_3 <- dplyr::mutate(test_PM10_3, lag_DATA_DT = DATA_DT + 10000)
+test_PM10_4 <- dplyr::select(test_PM10_3, lag_DATA_DT)
+test_PM10_3 <- dplyr::select(test_PM10_3, -lag_DATA_DT)
+test_PM10_4 <- dplyr::left_join(test_PM10_4, test_PM10_3, by = c("lag_DATA_DT" = "DATA_DT"))
+test_PM10_3 <- filter(test_PM10_3, DATA_DT >= 201904020000) #타겟 데이터를 만들고나서 맞는 타겟 데이터가 없는 날짜범위를 지움
+test_PM10_4 <- filter(test_PM10_4, lag_DATA_DT <= 201910312355)
+test_PM10_4 <- test_PM10_4[-147,] #147번째 줄에서 5분단위가 아닌 시간 행이 발견되어 삭제 refactory할 때 5분단위 자료 검증코드도 넣을것
