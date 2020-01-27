@@ -52,18 +52,20 @@ pivot_WS <- select(test_data, DATA_DT, LOC_CODE, WS) %>% pivot_wider(names_from 
 pivot_TMP <- select(test_data, DATA_DT, LOC_CODE, TMP) %>% pivot_wider(names_from = LOC_CODE, values_from = TMP)
 pivot_HUM <- select(test_data, DATA_DT, LOC_CODE, HUM) %>% pivot_wider(names_from = LOC_CODE, values_from = HUM)
 
-pivot <- list(pivot_PM10, pivot_PM2.5, pivot_O3, pivot_CO, pivot_SO2, pivot_NO2, pivot_NOX, pivot_NO, pivot_WD, pivot_WS, pivot_TMP, pivot_HUM)
+#필요한건 pivot이 아님 pivot <- list(pivot_PM10, pivot_PM2.5, pivot_O3, pivot_CO, pivot_SO2, pivot_NO2, pivot_NOX, pivot_NO, pivot_WD, pivot_WS, pivot_TMP, pivot_HUM)
+pivot_3d_array <- array(pivot_PM10, dim = c(12, 95, 61635))
+pivot <- array(data = NA, dim = c(61635, 95, 12))
 
+for(i in 1:61635){
+  for(j in 1:95){
+    pivot[i,j,1] <- pivot_PM10[i,j]
+  }
+}
 #위의 형태로 데이터를 나타내야하는 이유는 전처리된 raw_1904_1910의 형태가 측정시간과 측정소번호에 따라 중복되는 시간 자료가 있기 때문
 #모든 시간 자료는 하나만 있어야 함, 측정물질이 달라지면 다른 테이블의 형태로 다른 channel로 구성되야 한다고 판단됨
 #따라서 이상치 처리를 제외한 데이터 구성의 형태는 시간과 측정소번호로 구성된 테이블이 각 물질별 갯수만큼 각각의 채널로 존재하는 형태
 
 #target data 만들기 각 데이터의 24시간 후 데이터를 찾아서 뒷 컬럼에 붙임(PM10, PM2.5 대상)
-
-for(i in length(raw_1904_1910_6$DATA_DT)){
-  
-}
-
 #PM10 테스트자료에서 시간데이터가 5분간격으로 중간에 빠지거나 잘린곳이 없는지 점검
 #but 시계열 데이터를 고려하여 딥러닝 시킬것이 아니면 현재 접근법은 단순 회귀이므로 일단 시계열 데이터가 빠졌는지 상관할 필요는 없음
 #심지어 중간에 빠진 부분이 있어도 그 부분도 시계열 딥러닝에서 빠진 시간으로 고려될 것이므로 더욱 상관없을듯
@@ -93,3 +95,5 @@ for(i in 1:length(raw_1904_1910_7$DATA_DT)){
     }
   }
 }
+
+#https://rstudio.github.io/reticulate/ python in R 참고할것 
